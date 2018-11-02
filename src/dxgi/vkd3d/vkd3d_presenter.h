@@ -53,7 +53,13 @@ namespace dxvk {
 
   private:
 
+    VkD3DLoader             m_vkd3d;
 
+    Com<ID3D12CommandQueue> m_parent;
+
+    HWND                    m_window;
+    DXGI_SWAP_CHAIN_DESC1   m_desc;
+    
   };
 
 }

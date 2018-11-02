@@ -5,7 +5,10 @@ namespace dxvk {
   VkD3DPresenter::VkD3DPresenter(
             ID3D12CommandQueue*       pQueue,
             HWND                      hWnd,
-            DXGI_SWAP_CHAIN_DESC1*    pDesc) {
+            DXGI_SWAP_CHAIN_DESC1*    pDesc)
+  : m_parent(pQueue),
+    m_window(hWnd),
+    m_desc  (*pDesc) {
     
   }
 
@@ -33,14 +36,15 @@ namespace dxvk {
 
   HRESULT STDMETHODCALLTYPE VkD3DPresenter::GetDesc(
           DXGI_SWAP_CHAIN_DESC1*    pDesc) {
-    
+    *pDesc = m_desc;
+    return S_OK;
   }
 
 
   HRESULT STDMETHODCALLTYPE VkD3DPresenter::GetDevice(
           REFIID                    riid,
           void**                    ppDevice) {
-
+    return m_parent->QueryInterface(riid, ppDevice);
   }
 
   
