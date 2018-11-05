@@ -4,7 +4,7 @@
 #include "dxvk_hud.h"
 
 namespace dxvk::hud {
-  
+
   Hud::Hud(
     const Rc<DxvkDevice>& device,
     const HudConfig&      config)
@@ -37,33 +37,33 @@ namespace dxvk::hud {
                                 | VK_COLOR_COMPONENT_B_BIT
                                 | VK_COLOR_COMPONENT_A_BIT;
   }
-  
-  
+
+
   Hud::~Hud() {
-    
+
   }
-  
-  
+
+
   void Hud::update() {
     m_hudFramerate.update();
     m_hudStats.update(m_device);
   }
-  
-  
+
+
   void Hud::render(const Rc<DxvkContext>& ctx, VkExtent2D surfaceSize) {
     HudUniformData uniformData;
     uniformData.surfaceSize = surfaceSize;
-    
+
     this->updateUniformBuffer(ctx, uniformData);
 
     this->setupRendererState(ctx);
     this->renderHudElements(ctx);
   }
-  
-  
+
+
   Rc<Hud> Hud::createHud(const Rc<DxvkDevice>& device) {
     HudConfig config(env::getEnvVar(L"DXVK_HUD"));
-    
+
     return !config.elements.isClear()
       ? new Hud(device, config)
       : nullptr;
@@ -80,10 +80,24 @@ namespace dxvk::hud {
     m_renderer.beginFrame(ctx);
   }
 
-
+  
   void Hud::renderHudElements(const Rc<DxvkContext>& ctx) {
-    HudPos position = { 8.0f, 24.0f };
+    float hud_offset_x = 0;
+    float hud_offset_y = 0;
+    char const* offset_x;
+    char const* offset_y;
+    offset_x = getenv("DXVK_HUD_OFFSET_X");
+    offset_y = getenv("DXVK_HUD_OFFSET_Y");
+    if (!offset_x == 0){
+      hud_offset_x = atof(offset_x);
+    }
     
+    if (!offset_y == 0){
+      hud_offset_y = atof(offset_y);
+    }
+
+    HudPos position = { hud_offset_x + 8.0f, hud_offset_y + 24.0f };
+
     if (m_config.elements.test(HudElement::DxvkVersion)) {
       m_renderer.drawText(ctx, 16.0f,
         { position.x, position.y },
@@ -96,12 +110,12 @@ namespace dxvk::hud {
       position = m_hudDeviceInfo.render(
         ctx, m_renderer, position);
     }
-    
+
     position = m_hudFramerate.render(ctx, m_renderer, position);
     position = m_hudStats    .render(ctx, m_renderer, position);
   }
-  
-  
+
+
   void Hud::updateUniformBuffer(const Rc<DxvkContext>& ctx, const HudUniformData& data) {
     auto slice = m_uniformBuffer->allocPhysicalSlice();
     std::memcpy(slice.mapPtr(0), &data, sizeof(data));
@@ -117,10 +131,10 @@ namespace dxvk::hud {
     info.stages         = VK_PIPELINE_STAGE_VERTEX_SHADER_BIT
                         | VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
     info.access         = VK_ACCESS_UNIFORM_READ_BIT;
-    
+
     return m_device->createBuffer(info,
       VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
       VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
   }
-  
+
 }
